@@ -1,97 +1,289 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# MyNaksha - Astrology Consultation App
 
-# Getting Started
+A modern React Native application for astrology consultations featuring AI and human astrologer interactions, built with React Native 0.76 and TypeScript.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## 🎥 Demo
 
-## Step 1: Start Metro
+Watch the app in action: [**View Demo Video**](https://drive.google.com/file/d/12Fe8UOKJdhIXs5cV_0bJAAeZbPhuvaS2/view?usp=sharing)
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## 📱 Features
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+- **Welcome Screen**: Introduction to the astrology consultation service
+- **Real-time Chat**: Interactive chat interface with system messages
+- **Dual Astrologer Support**: 
+  - 🤖 AI Astrologer (Green bubbles)
+  - 👤 Human Astrologer (Orange bubbles)
+- **Feedback System**: 
+  - Like/Dislike toggle for AI astrologer messages
+  - Expandable feedback chips (Inaccurate, Too Vague, Too Long)
+  - Emoji reactions for other messages
+- **Message Features**:
+  - Reply to messages (swipe-right gesture)
+  - Long-press emoji reactions
+  - Color-coded sender bubbles
+  - Event/system messages
+- **Chat Management**:
+  - End chat with confirmation modal
+  - 5-star rating system
+  - Session tracking
 
-```sh
-# Using npm
-npm start
+## 🏗️ Architecture & Component Structure
 
-# OR using Yarn
-yarn start
+The app follows a modular component-based architecture:
+
+### **Screens** (`src/screens/`)
+- **`WelcomeScreen.tsx`**: Landing page with app introduction and "Start Chat" button
+- **`ChatScreen.tsx`**: Main chat interface handling message flow, state management, and modals
+  - Manages message state and interactions
+  - Handles like/dislike feedback logic
+  - Controls chat initiation and termination
+  - Implements rating modal
+
+### **Components** (`src/components/`)
+- **`MessageBubble.tsx`**: Reusable message component with:
+  - Gesture handlers for swipe-to-reply
+  - Animated feedback UI
+  - Conditional rendering based on message type and sender
+  - Like/Dislike toggle with animated feedback chips
+  - Emoji reaction picker
+
+- **`SearchBar.tsx`**: Search input component (legacy, not used in current flow)
+- **`ChatRow.tsx`**: Chat list item component (legacy, not used in current flow)
+
+### **Navigation** (`src/navigation/`)
+- **`types.ts`**: TypeScript definitions for navigation routes and params
+
+### **Data** (`src/data/`)
+- **`chatsData.ts`**: Mock data structure (legacy)
+- **`INITIAL_MESSAGES`**: Predefined conversation in ChatScreen
+
+## 🎨 React Native Reanimated Usage
+
+### **1. Animated Feedback Chips**
+Located in `MessageBubble.tsx`:
+```typescript
+const feedbackHeight = useSharedValue(0);
+
+const feedbackChipsStyle = useAnimatedStyle(() => ({
+  maxHeight: feedbackHeight.value * 80,
+  opacity: feedbackHeight.value,
+}));
+
+// Expand on dislike
+feedbackHeight.value = withSpring(1);
+
+// Collapse after selection
+feedbackHeight.value = withSpring(0);
+```
+- Uses `withSpring` for smooth expand/collapse animation
+- Animates both height and opacity simultaneously
+
+### **2. Swipe-to-Reply Gesture**
+Located in `MessageBubble.tsx`:
+```typescript
+const translateX = useSharedValue(0);
+
+const panGesture = Gesture.Pan()
+  .activeOffsetX(10)
+  .onUpdate((event) => {
+    'worklet';
+    if (event.translationX > 0) {
+      translateX.value = Math.min(event.translationX, SWIPE_THRESHOLD);
+    }
+  })
+  .onEnd((event) => {
+    'worklet';
+    if (event.translationX > SWIPE_THRESHOLD) {
+      runOnJS(handleReply)();
+    }
+    translateX.value = withSpring(0);
+  });
+```
+- Implements swipe gesture with threshold detection
+- Uses `runOnJS` to trigger React state updates from UI thread
+- Spring animation returns bubble to original position
+
+### **3. Rating Modal Animations**
+Located in `ChatScreen.tsx`:
+```typescript
+const fadeAnim = useState(new Animated.Value(0))[0];
+const scaleAnim = useState(new Animated.Value(0.8))[0];
+
+Animated.parallel([
+  Animated.timing(fadeAnim, {
+    toValue: 1,
+    duration: 300,
+    useNativeDriver: true,
+  }),
+  Animated.spring(scaleAnim, {
+    toValue: 1,
+    friction: 8,
+    useNativeDriver: true,
+  }),
+]).start();
+```
+- Combines fade and scale animations
+- Uses native driver for 60fps performance
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js (v18 or higher)
+- npm or Yarn
+- Xcode (for iOS development)
+- Android Studio (for Android development)
+- CocoaPods (for iOS)
+
+### Installation
+
+1. **Clone the repository**
+```bash
+git clone https://github.com/Anurag-Srivastav/MyNaksha.git
+cd MyNaksha
 ```
 
-## Step 2: Build and run your app
-
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
+2. **Install dependencies**
+```bash
+npm install
+# or
+yarn install
 ```
 
-### iOS
-
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
+3. **Install iOS dependencies**
+```bash
+cd ios
+pod install
+cd ..
 ```
 
-Then, and every time you update your native dependencies, run:
+### Running the App
 
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
+#### iOS
+```bash
 npm run ios
-
-# OR using Yarn
+# or
 yarn ios
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+#### Android
+```bash
+npm run android
+# or
+yarn android
+```
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+### Development
 
-## Step 3: Modify your app
+Start the Metro bundler:
+```bash
+npm start
+# or
+yarn start
+```
 
-Now that you have successfully run the app, let's make changes!
+## 📦 Key Dependencies
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+- **React Native**: 0.76.6
+- **React Navigation**: 
+  - @react-navigation/native: ^7.1.26
+  - @react-navigation/native-stack: ^7.9.0
+- **Gesture & Animation**:
+  - react-native-reanimated: ^3.19.5
+  - react-native-gesture-handler: ^2.30.0
+- **React Native Screens**: ^4.19.0
+- **Safe Area Context**: ^5.5.2
+- **TypeScript**: ^5.8.3
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+## 🛠️ Configuration
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+### Babel Configuration
+The app uses React Native Reanimated which requires the Reanimated Babel plugin to be listed **last**:
 
-## Congratulations! :tada:
+```javascript
+// babel.config.js
+module.exports = {
+  presets: ['module:@react-native/babel-preset'],
+  plugins: ['react-native-reanimated/plugin'], // Must be last
+};
+```
 
-You've successfully run and modified your React Native App. :partying_face:
+### Native Setup
 
-### Now what?
+#### iOS (`ios/MyNaksha/AppDelegate.swift`)
+- Swift-based AppDelegate
+- Gesture handler integration
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+#### Android (`android/app/src/main/java/com/mynaksha/MainActivity.kt`)
+```kotlin
+override fun onCreate(savedInstanceState: Bundle?) {
+  super.onCreate(null) // Required for react-native-screens
+}
+```
 
-# Troubleshooting
+## 📱 App Flow
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+1. **App Launch** → Welcome Screen
+2. **Start Consultation** → Chat Screen (empty state)
+3. **Initiate Chat** → Loads predefined conversation
+4. **User Interaction**:
+   - Send messages
+   - React to messages (emoji or like/dislike)
+   - Reply to specific messages (swipe gesture)
+5. **End Chat** → Confirmation modal → Rating modal → Navigate back
 
-# Learn More
+## 🎯 Message Types
 
-To learn more about React Native, take a look at the following resources:
+- **`system`**: Event messages (centered, gray)
+- **`user`**: User messages (blue, right-aligned)
+- **`ai_astrologer`**: AI responses (green, left-aligned) with like/dislike
+- **`human_astrologer`**: Human astrologer (orange, left-aligned)
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+## 🔄 State Management
+
+- Local state management using React hooks
+- No external state management library
+- Message state includes:
+  - `liked` (boolean | undefined): Feedback state
+  - `feedbackType`: Emoji or feedback indicator
+  - `feedbackReason`: Specific dislike reason
+  - `replyTo`: Reference to replied message ID
+
+## 📝 Code Style
+
+- TypeScript for type safety
+- Functional components with hooks
+- StyleSheet for styling (no external styling libraries)
+- Modular component structure
+- Clear separation of concerns
+
+## 🔧 Troubleshooting
+
+### Metro Cache Issues
+```bash
+npm start -- --reset-cache
+```
+
+### Pod Install Issues (iOS)
+```bash
+cd ios
+pod deintegrate
+pod install
+cd ..
+```
+
+### Android Build Issues
+```bash
+cd android
+./gradlew clean
+cd ..
+```
+
+## 📄 License
+
+This project is part of a personal portfolio.
+
+## 👤 Author
+
+Anurag Srivastav
+- GitHub: [@Anurag-Srivastav](https://github.com/Anurag-Srivastav)
